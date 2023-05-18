@@ -1,0 +1,106 @@
+
+This page is a Placeholder. Ignore the Instruction Set.
+
+
+
+#####################################################
+AMD Advanced Media Acceleration (|SDK|) Release Notes
+#####################################################
+
+.. note::
+   Version: |release|
+
+.. highlight:: none
+
+.. contents:: Table of Contents
+    :local:
+    :depth: 1
+.. .. section-numbering::
+
+|
+
+**********
+What's New
+**********
+
+This version provides ...:
+
+- A
+- B
+
+
+|
+
+****************
+Changed Behavior
+****************
+
+Title to be added
+=================
+Text to be added
+
+|
+
+*****************************************
+Supported Platforms and Operating Systems
+*****************************************
+
+The |SDK| currently supports the following platforms:
+
+- Xilinx MA35
+- |VT2|
+
+The |SDK| currently supports the following software tools:
+
+- FFmpeg x.x
+- GStreamer 1.x.x
+
+The |SDK| has been tested and validated by Xilinx on the following operating environments:
+
+- Amazon Linux 2 (Kernel 4.14 and 5.10)
+- Ubuntu 22.04 (Kernel 5.15)
+- Ubuntu 20.04.4 (Kernel 5.13)
+- Ubuntu 20.04.3 (Kernel 5.11)
+- Ubuntu 20.04.1 (Kernel 5.4)
+- Ubuntu 20.04.0 (Kernel 5.4)
+- Ubuntu 18.04.5 (Kernel 5.4)
+- RHEL 7.8 (Kernel 4.9.184)
+
+The above list of validated operating environments is not intended to be exclusionary. If you choose to run the |SDK| using a different operating environment and encounter issues, please `file a GitHub issue <https://github.com/Xilinx/video-sdk/issues>`_.
+
+
+|
+
+***********
+Limitations
+***********
+
+- Does not::
+ + Prepare coffee
+ + Perform house chores
+
+|
+
+************
+Known Issues
+************
+
+Holographic Assistant
+=====================
+.. https://jira.xilinx.com/browse/CR-1139665
+
+- Description: Runs out of battery
+
+- Solution: Use rechargeable ones.
+
+
+..
+  ------------
+  
+  © Copyright 2020-2023, Advanced Micro Devices, Inc.
+  
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.

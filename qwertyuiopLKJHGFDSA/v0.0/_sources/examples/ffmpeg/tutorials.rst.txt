@@ -1,0 +1,248 @@
+This page is under construction.
+
+################
+FFmpeg Tutorials
+################
+
+.. highlight:: none
+
+This page provides tutorials on how to use FFmpeg with the |SDK|. The complete reference guide for the FFmpeg version included in the |SDK| can be found :doc:`here </using_ffmpeg>`.
+
+The tutorials break down the commands, starting with simple decode, scale and encode pipelines. The tutorials end with different varieties of full transcode pipelines.
+
+
+.. contents:: Table of Contents
+    :local:
+    :depth: 3
+.. .. section-numbering::
+
+
+*****************
+Environment Setup
+*****************
+
+.. include:: /include/examples/setup_examples.rst
+
+|
+**********************
+Simple FFmpeg Examples
+**********************
+
+Some of the examples read or write RAW files from disk (encode-only or decode-only pipelines). There is a chance that due to the massive bandwidth required for operating on these RAW files, you will notice a drop in FPS; this is not due to the |SDK| but the disk speeds. We recommend reading/writing from ``/dev/shm`` which is a RAM disk.
+
+In the following sections, description of command line options is done in an accumulative manner, i.e., previously described options are not explained further. 
+
+
+.. _decode-only:
+
+Decode Only
+===========
+This example accepts a clip that is already encoded in H.264, and will decode the file into a RAW format and save it to disk.
+
+**Command Line**::
+
+    ffmpeg -y -hwaccel ama -hwaccel_device /dev/ama_transcoder0 -c:v h264_ama -out_fmt nv12 -i <INPUT> \
+     -vf hwdownload,format=nv12 -f rawvideo /tmp/dec_out.nv12
+
+Explanation of the flags:
+
+- ``ffmpeg``
+
+  + The ffmpeg application, which is provided by AMD, and moved to the top of the PATH when you sourced the setup.sh script
+
+- ``hwaccel ama``
+
+  + Instructs FFmpeg to use accelerated plugins provided by |SDK|
+
+- ``hwaccel_device /dev/ama_transcoder0``
+
+  + Instructs FFmpeg to use the 1st accelerator device
+
+- ``-out_fmt nv12``
+
+  + Specifies nv12 output format for the decoded video. Note that this option has to be specified twice.
+
+- ``-f rawvideo``
+  
+  + This signifies that the video is in a raw format, without container or other metadata/information about the clip
+
+- ``-c:v h264_ama``
+
+  + Declares the decoder's codec for video (as opposed to audio ``-c:a h264_ama``) is the hardware-accelerated H.264 decoder
+
+- ``-i <INPUT>``
+
+  + The input file to be transcoded
+
+- ``-vf hwdownload``
+
+  + Internally, the decoder operates on |SDK| type buffers to improve performance. To convert back to a host-buffer, you must execute this filter.
+
+- ``-y``
+
+  + Enable overwrite without prompting the user if they're sure
+
+- ``/tmp/dec_out.yuv``
+
+  + The decoder will save the file to the path above
+
+.. _encode-only:
+
+Encode Only
+===========
+This example accepts a RAW 1080p60 clip in YUV420 format. It will pass the clip to the encoder to produce an AV1 encoded MP4 output with a target bitrate of 5Mbps and saves it to disk.
+
+**Command Line**::
+
+    ffmpeg -hwaccel ama -hwaccel_device /dev/ama_transcoder0 -f rawvideo -pix_fmt yuv420p -s:v 1920x1080 -r 60 -i <INPUT> -vf "hwupload" -c:v av1_ama -b:v 5M -f mp4 -y sn1_av1.mp4
+
+Explanation of the flags:
+
+- ``-s 1920x1080``
+
+  + Since there is no container or metadata in a RAW clip, the user must define the input clip's resolution/size. This example states the input is 1080p
+
+- ``-r 60``
+
+  + Again, without metadata, the encoder requires the framerate of the incoming stream
+
+- ``-pix_fmt yuv420p``
+
+  + The color space of the encoder is by default yuv420p. this example is defining the input clip as being this same color space 
+
+- ``-f mp4``
+
+  + Sets the output video container to MP4
+
+- ``-b:v 5M``
+
+  + The target bitrate of the encoded stream. 8M signifies a target bitrate of 8 Megabits per second. You can also use 8000K or 8000000.
+
+- ``-c:v av1_ama``
+
+  + Declares the encoder's codec for video (as opposed to audio ``-c:a ...``) is the hardware-accelerated H.264 encoder
+
+- ``/tmp/enc_out.mp4``
+
+  + Save the output in the above path.
+    
+Basic Transcode
+===============
+This example takes an H.264 clip and transcodes it to HEVC at the bitrate of 8Mbps. The output is written into :file:`/tmp/h264_to_hevc`. 
+
+**Command Line**::
+
+    ffmpeg -y -hwaccel ama -hwaccel_device /dev/ama_transcoder0 -c:v h264_ama -i <INPUT> \
+     -c:v hevc_ama -b:v 8M  -f rawvideo  /tmp/h264_to_hevc.hevc
+ 
+
+.. _decode-and-scale-only:
+
+Decode Only Into Multiple-Resolution Outputs
+============================================
+This example decodes an existing H.264 file and then scales it into multiple resolutions as defined below. It will not re-encode them, but save the RAW outputs to disk under ``/tmp/_scale<resolution>.yuv``
+
+**Command Line**::
+
+    ffmpeg -y -hwaccel ama -hwaccel_device /dev/ama_transcoder0 \
+   -c:v h264_ama  -out_fmt nv12 -i <INPUT>  \
+   -filter_complex "scaler_ama=outputs=4:out_res=(1920x1080|full|nv12)(1280x720|full|nv12)(720x480|full|nv12)(360x240|full|nv12) [a][b][c][d]; [a]hwdownload,format=nv12[a1];[b]hwdownload,format=nv12[b1];[c]hwdownload,format=nv12[c1];[d]hwdownload,format=nv12[d1]" \
+   -map '[a1]' -f rawvideo -pix_fmt nv12 -y /tmp/scale_1080p.yuv \
+   -map '[b1]' -f rawvideo -pix_fmt nv12 -y /tmp/scale_720p.yuv  \
+   -map '[c1]' -f rawvideo -pix_fmt nv12 -y /tmp/scale_480p.yuv \
+   -map '[d1]' -f rawvideo -pix_fmt nv12 -y /tmp/scale_240p.yuv
+
+Explanation of the flags:
+
+- ``-filter_complex``
+
+  + The FFmpeg ``-filter_complex`` flag allows combining multiple filters together using a graph-like syntax. This example uses the :option:`scaler_ama` to create 4 output resolutions from the input stream.
+  + The :option:`scaler_ama` filter configures the hardware-accelerated scaler to produce 4 output resolutions (1920x1080, 1280x720, 720x480, and 360x240). For each output, the width, height, frame rate and pixel format are defined as arguments to ``out_res`` option as in (WidthxHeight|Rate|Format). The 4 outputs are transfered to the host as ``a1``, ``b1``, ``c1`` and ``d1`` respectively. 
+
+- ``-map "[ID]"``
+
+  + Selects an output of the filter graph. The flags that follow apply to the selected stream.
+
+- ``/tmp/scale_<resolution>.yuv``
+
+  + Save the output files to the paths listed
+
+.. _encode-only-multiple-res-outputs:
+
+
+Encode Only Into Multiple-Resolution Outputs
+============================================
+This example takes a raw 1080p60 YUV file, scales it down to different resolutions and frame rates, encodes each of the scaled streams to different formats and saves them to disk under :file:`/tmp/<encode format>_<resolution>p<frame rate>.mp4`
+
+**Command Line**::
+
+   ffmpeg -y -hwaccel ama -hwaccel_device /dev/ama_transcoder0 -f rawvideo -pix_fmt yuv420p -s:v 1920x1080 -r 60 -i <INPUT> \
+   -filter_complex "hwupload,scaler_ama=outputs=4:out_res=(1920x1080full)(1280x720|half)(720x480|half)(360x240|half) [a][b][c][d]" \
+   -map '[a]' -c:v hevc_ama -b:v 6M -f mp4 -y /tmp/hevc_1080p60.mp4 \
+   -map '[b]' -c:v av1_ama  -b:v 2M -f mp4 -y /tmp/av1_720p30.mp4 \
+   -map '[c]' -c:v h264_ama -b:v 1M -f mp4 -y /tmp/h264_480p30.mp4 \
+   -map '[d]' -c:v av1_ama  -b:v 1M -f mp4 -y /tmp/av1_240p30.mp4
+
+Explanation of the flags:
+
+- ``-filter_complex "hwupload...``
+
+  + Specifies that video clip gets upload to the device.
+
+- ``-filter_complex "...scaler_ama=outputs=4:out_res=...(1280x720|half)...``
+
+  + Declares scaler output of given resolution and rate. See :option:`scaler_ama` for more details.
+
+- ``-c:v [hevc_ama | av1_ama | h264_ama]``
+
+  + Declares various encode types HEVC, AV1 and H.264, respectively.
+
+- ``/tmp/encode-format_resoultion.encode-format``
+
+  + Saves the output clips to the location listed
+
+.. _transcode-with-abr-ladder:
+
+Transcode with Multiple-Resolution Outputs
+==========================================
+This example implements a complete transcoding pipeline on an 1080p60 H.264 input. It decodes the input stream, scales it to 4 different resolutions and encodes scaler's outputs into various formats and saves them to disk under :file:`/tmp/<encoder format>_<resolution>.mp4`
+
+**Command Line**::
+
+   ffmpeg -y -hwaccel ama -hwaccel_device /dev/ama_transcoder0 \
+   -c:v h264_ama -i <INPUT> \
+   -filter_complex "scaler_ama=outputs=4:out_res=(1920x1080)(1280x720)(720x480)(360x240) [a][b][c][d]" \
+   -map '[a]' -c:v hevc_ama -b:v 6M -f mp4 -y /tmp/hevc_1080p.mp4 \
+   -map '[b]' -c:v av1_ama  -b:v 2M -f mp4 -y /tmp/av1_720p.mp4 \
+   -map '[c]' -c:v h264_ama -b:v 1M -f mp4 -y /tmp/h264_480p.mp4 \
+   -map '[d]' -c:v av1_ama  -b:v 1M -f mp4 -y /tmp/av1_240p.mp4
+
+Transcode in ULL Mode
+=====================
+This example implements an ultera low latency transcode pipeline. For more details refer :ref:`Tuning Transcode Latency <latency-tuning>`.
+
+**Command Line**::
+
+   ffmpeg  -hide_banner -loglevel error -y -hwaccel ama -hwaccel_device /dev/ama_transcoder0 -low_latency 1 -c:v h264_ama -i <INPUT> \
+   -c:v hevc_ama -b:v 10M -lookahead_depth 0 -qp_mode uniform -f rawvideo  /tmp/h264_to_hevc.hevc
+
+Explanation of the flags:
+
+- ``-low_latency 1``
+
+  + Enables low latency decoding mode.
+
+- ``-lookahead_depth 0``
+
+  + LA size of 0 triggers ultra low latency encoding mode. Note that this option also requires constant QP and hence ``-qp_mode uniform`` flag.
+
+..
+  ------------
+  
+  © Copyright 2020-2023, Advanced Micro Devices, Inc.
+  
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.

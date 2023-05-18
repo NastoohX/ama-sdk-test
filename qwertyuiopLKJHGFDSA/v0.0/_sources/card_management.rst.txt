@@ -1,0 +1,307 @@
+This page is under construction.
+
+
+###############
+Card Management
+###############
+
+.. highlight:: none
+
+.. contents:: Table of Contents
+    :local:
+    :depth: 1
+.. .. section-numbering::
+
+
+********
+Overview
+********
+
+The |SDK| builds on the Xilinx Runtime (XRT) and the Xilinx Resource Manager (XRM) to interface with AMD video acceleration cards. The |SDK| includes the ``mautil``, ``mamgmt`` and ``xrmadm`` command line tools for card installation, upgrade, and management.
+
+
+mautil and mamgmt
+=================
+
+The AMD Board Utility (``mautil``) and the AMD Board Management Utility (``mamgmt``) are standalone command line tools used to query and administer AMD acceleration cards. 
+
+- ``mautil`` is used to examine, identify, reset, and validate the installed accelerator card(s). 
+- ``mamgmt`` is used to flash the card firmware, examine devices, and administer the installed accelerator card(s).
+
+The ``mautil`` and ``mamgmt`` commands typically target one device at a time using a PCIe BDF (Bus:Device.Function) identifier. The BDF notation works as follows:
+
+- PCI Domain number, often padded using leading zeros to four digits
+- A colon (:)
+- PCI Bus number in hexadecimal, often padded using a leading zeros to two or four digits
+- A colon (:)
+- PCI Device number in hexadecimal, often padded using a leading zero to two digits . Sometimes this is also referred to as the slot number.
+- A decimal point (.)
+- PCI Function number in hexadecimal. Only this last digit will differ between the User BDF and the Management BDF.
+
+xrmadm and xrmd
+===============
+
+XRM is the software which manages the hardware accelerators available in the system. The XRM daemon (``xrmd``) is a background process supporting reservation, allocation, and release of hardware acceleration resources. The XRM ``xrmadm`` command line tool is used to interact with the XRM daemon (``xrmd``) in order to check status and generate resource utilization reports. 
+
+For more details about the XRM commands specific to the |SDK| refer to the :ref:`XRM Command Reference Guide <xrm-reference>`.
+
+|
+
+***************************
+Card and Device Identifiers
+***************************
+
+.. _device-bdf:
+
+Device BDF (mautil)
+===================
+
+The list of all installed |SDK| compatible devices, including their BDF is obtained with the ``mautil examine`` command.
+
+For example, the command below detected 2 devices and lists their BDFs::
+
+   $ mautil examine
+   List of available devices:
+   0000:01:00.0
+   0000:02:00.0
+   Info: No action taken, no reports given.
+   Info: Use --help to check cmd options to use for reports
+
+The last device listed has BDF of 0000:02:00.0, which describes Domain 0, Bus 02, Device 00, Function 0. 
+
+
+.. _device-management-bdf:
+
+Device BDF (mamgmt)
+===================
+
+The list of all installed |SDK| compatible devices, including their BDF can also be obtained with the ``mamgmt examine`` command.
+
+For example, the command below detected 2 devices and lists their BDF designations::
+
+    $ mamgmt examine
+
+      ERROR: Please specify a single device using --device option
+      
+      List of available devices:
+      0000:01:00.0
+      0000:02:00.0
+      ERROR: Operation Cancelled
+
+The last device listed has BDF of 0000:02:00.0, which describes Domain 0, Bus 2, Device 00, Function 0. 
+
+.. _device-device-id:
+
+Bus ID
+======
+
+You can look-up the PCIe bus ID of a device through the following command::
+
+    cat /sys/class/misc/ama_transcoder{x}/bus_id
+
+, where x is a number between 0 to total number of devices minus 1.
+
+.. rubric:: Example
+
+- Bus id of /sys/class/misc/ama_transcoder0 is::
+
+    $ cat /sys/class/misc/ama_transcoder0/bus_id 
+      0000:01:00.0
+
+- This can be verified by ``mautil examine`` command.
+
+|
+
+.. _card-version_number:
+
+Firmware Version Number
+=======================
+
+To look-up the version number of each installed firmware, proceed as follows::
+
+   $ cat /sys/class/misc/ama_transcoder0/version_information 
+   <<<Version Info>>>
+            ZSP Version = 0.1.5
+            SC Version = 0.0.0
+            eSecure Version = 1.0.0
+            PCIe FW Version = 2.1.0
+            PCIe CTRL Patch Version = 1.0.1
+            PCIe PHY Patch A Version = 1.0.0
+
+|
+
+.. _examining-cards:
+
+**********************
+Checking System Status
+**********************
+
+The ``mautil`` commands provides useful details about your environment and can be used to ensure that your cards and devices are properly detected.::
+
+   mautil -d <BDF> command, where command is one of the following:
+   examine    - Status of the system and device.
+   reset      - Resets the given device
+   validate   - Validates the basic shell acceleration functionality
+
+For more details on ``examine`` command, see :ref:`Checking Device Status <device-details>`.
+
+|
+
+.. _device-details:
+
+**********************
+Checking Device Status
+**********************
+
+The ``mautil examine -d <User BDF> --report <type>`` commands provides additional details about the status of each |SDK| compatible device installed. 
+
+The --report (or -r) switch is used to view specific report(s) of interest:
+
+- ``electrical``: Reports Electrical and power sensors present on the device
+- ``device-hw``: Provides information on the device's hardware
+- ``error-cnt``: Reports on device's error counter
+- ``flash-info``: Prints device's flash information
+- ``memory``: Reports memory topology of the device
+- ``pcie-info``: PCIe information of the device
+- ``thermal``: Reports thermal sensors present on the device
+- ``all``: Prints all the known status
+
+These reports can also be generated in a JSON file, by adding ``--format JSON -o <filename>`` to the ``mautil examine`` command.
+
+Example of thermal and electrical reports, for the device with BDF 0000:02:00.0 is::
+
+   mautil examine -r thermal electrical -d 0000:02:00.0
+   
+   ---------------------------------
+   1/1 [0000:02:00.0] : MA35 Device
+   ---------------------------------
+   Warning: Device is not ready - Limited functionality available with MA tools.
+   
+   MA35 Thermal Info:
+   Temperature:
+     id: sensor3 [102 C]
+     id: sensor2 [103 C]
+     id: sensor1 [110 C]
+     id: sensor0 [102 C]
+     id: sensor0 [2243 C]
+   MA35 Electrical Info:
+   Power & Power Rails:
+     id: aux [702 mV]
+     id: ddr0 [710 mV]
+     id: vip [0 mV]
+     id: enc [0 mV]
+     id: 12V PEX Current [2369 mA]
+     id: 3V AUX Current [0 mA]
+     id: 3V PEX Current [0 mA]
+     id: 12V PEX Voltage [0 mV]
+     id: 3V AUX Voltage [0 mV]
+     id: 3V PEX Voltage [0 mV]
+     id: sensor0 [0 mW]
+
+|
+
+.. _device-status:
+
+*****************************
+Checking Device Configuration
+*****************************
+
+The ``mamgmt`` provides additional commands for managing the installed devices. In addition to commands that are provided by :ref:`mautil <device-details>`, ``mamgmt`` also allows for programming a device and creating Virtual Functions (VF) on a device::
+
+   mamgmt:
+     examine      - Status of the system and device
+     flash-verify - Verify flash image for a given device
+     numvfs       - Create a VF. Or destroys the active VF
+     program      - Update image(s) for a given device
+     reset        - Resets the given device
+
+See :ref:`Programming a Device <device-prog>`, for details on how to program a device.
+
+To create and destroy a VF device, issue the following commands, respectively::
+
+       $ sudo mamgmt -d <BDF> numvfs -v 1 # Create VF device
+       $ sudo mamgmt -d <BDF> numvfs -v 0 # Destroy VF device
+
+.. _device-prog:
+
+********************
+Programming a Device
+********************
+
+To program various component on a device, specify the <BDF> of the device, along with the desired image type::
+
+   sudo mamgmt -d <BDF> program --flash-type ZSP --image <path_to_flash_image>
+    # -d, --device       - The Bus:Device.Function (e.g., 0000:01:00.0) device of interest.
+    # --image            - Specifies path to the firmware image of the device.  
+    # --flash-type       - Specify the flash section to program. Valid values:
+                            # ZSP
+                            # eSecure
+                            # spi_flash
+                            # PciePhyPatch
+                            # PcieCtlPatch
+                            # PcieFw
+    # --backup           - Program backup region
+
+For example,the following command programs the ZSP system controller with zsp_firmware_packed_v015.bin flash image.::
+
+   mamgmt -d 0000:01:00.0 program --flash-type ZSP  --image zsp_firmware_packed_v015.bin
+   2023-05-05 15:31:49.729246 NOTICE [GLOBAL] WriteFlash Starting, pls Wait....
+   2023-05-05 15:31:53.789846 NOTICE [GLOBAL] flash_progress = 10%
+   2023-05-05 15:31:54.878972 NOTICE [GLOBAL] flash_progress = 20%
+   2023-05-05 15:31:55.935789 NOTICE [GLOBAL] flash_progress = 30%
+   2023-05-05 15:31:57.024425 NOTICE [GLOBAL] flash_progress = 40%
+   2023-05-05 15:31:58.081460 NOTICE [GLOBAL] flash_progress = 50%
+   2023-05-05 15:31:59.170251 NOTICE [GLOBAL] flash_progress = 60%
+   2023-05-05 15:32:00.227076 NOTICE [GLOBAL] flash_progress = 70%
+   2023-05-05 15:32:01.316509 NOTICE [GLOBAL] flash_progress = 80%
+   2023-05-05 15:32:02.373775 NOTICE [GLOBAL] flash_progress = 90%
+   2023-05-05 15:32:03.463122 NOTICE [GLOBAL] flash_progress = 100%
+   ****************************************************
+   Program command completed with status:
+   PASS
+   ****************************************************
+
+To verify proper programming, issue the following command::
+
+   mamgmt -d 0000:01:00.0 flash-verify --flash-type ZSP  --image zsp_firmware_packed_v015.bin
+
+   ****************************************************
+   Flash-Verify command completed with status:
+   PASS
+   ****************************************************
+|
+
+*****************************
+Checking Resource Utilization
+*****************************
+
+.. include:: ./include/managing_jobs/checking_load.rst
+
+|
+
+.. _card-reset:
+
+************
+Device Reset
+************
+
+|SDK| offers 2 types of reset:
+
+#. Function Level Reset (FLR)
+
+#. Power Level Reset (PLR)
+
+FLR allows for functional re-initialization of a device. This can be achieved through ``mamgmt reset --type flr -d <BDF>`` or ``mautil reset --type flr -d <BDF>``. 
+
+PLR allows for power reset of a given device. This can only be achieved via ``mamgmt`` as in ``mamgmt reset --type por -d <BDF>``
+
+..
+  ------------
+  
+  © Copyright 2020-2023, Advanced Micro Devices, Inc.
+  
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.

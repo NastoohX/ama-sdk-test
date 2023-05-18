@@ -1,0 +1,172 @@
+This Page is a Placeholder. Ignore the Instruction Set.
+
+
+
+.. _installation-instructions:
+
+##########################################
+Getting Started with Alveo U30 on Premises
+##########################################
+
+.. highlight:: none
+
+.. contents:: Table of Contents
+    :local:
+    :depth: 2
+.. .. section-numbering::
+
+
+*************
+Chassis Setup
+*************
+
+1. PCIe bifurcation must be enabled on each slot with an |DEVICE| card. Check the BIOS settings to make sure this is the case.
+2. Enable IOMMU by updating /etc/default/grub file to include
+
+   * ``GRUB_CMDLINE_LINUX_DEFAULT="quiet splash amd_iommu=on iommu=pt"``, for AMD based systems
+   * ``GRUB_CMDLINE_LINUX_DEFAULT="quiet splash intel_iommu=on iommu=pt"``, for Intel based chassis
+3. Update Grub
+
+::
+
+   sudo update-grub
+
+4. Allocate at least 8GB of huge pages
+
+::
+
+   sudo sh -c "echo 'vm.nr_hugepages=4096' >> /etc/sysctl.conf"
+5. Reboot
+
+::
+
+   sudo reboot
+6. Verify settings
+
+::
+
+   cat /proc/cmdline
+|
+   ``BOOT_IMAGE=/vmlinuz-5.15.0-50-generic root=/dev/mapper/vg00-rootlv ro quiet splash amd_iommu=on iommu=pt``
+and
+
+::
+
+   cat /proc/meminfo | grep -i huge
+
+, should return::
+
+   HugePages_Total:    4096
+   HugePages_Free:     4096
+   HugePages_Rsvd:        0
+   Hugepagesize:       2048 kB
+
+***********
+Flash Cards
+***********
+
+To establish whether a card needs to be flashed with new firmwares, proceed as follows:
+
+#. List |SDK| PCIe devices
+
+   .. code-block::
+
+      sudo lspci -vvvd 10ee
+
+   If devices are not listed as ``Multimedia controller`` and/or Region 4 size is not 512MB, a flash update is required.
+
+#. If flashing is required, after downloading the all flash image files, ``flash_image_v0_1_4.bin``, ``zsp_otp_firmware_packed.bin`` and ``zsp_firmware_packed_v015.bin`` proceed as follows:
+
+   .. note::
+   
+     Please note to use BDF in this format 0000:xx:yy.z , even though lspci lists down it as xx:yy.z.
+
+#. Remove current accelerator driver if it exists and reboot
+
+   .. code-block::
+
+      sudo rmmod amd_transcode && sudo reboot
+
+#. Flash SPI
+
+   .. code-block::
+
+      sudo /opt/amd/ma35/bin/mamgmt -d <bdf> program --flash-type spi_flash --image flash_image_v0_1_4.bin && sudo shutdown -P now
+
+#. Flash ZSP OTP
+
+   .. code-block::
+
+      sudo /opt/amd/ma35/bin/mamgmt -d <bdf> program --flash-type ZSP --image zsp_otp_firmware_packed.bin.
+
+#. Cold reboot the system twice.
+
+#. Flash ZSP firmware
+
+   .. code-block::
+
+      sudo /opt/amd/ma35/bin/mamgmt -d <bdf> program --flash-type ZSP --image zsp_firmware_packed_v015.bin && sudo shutdown -P now
+
+#. Insert kernel module
+
+   .. code-block::
+
+      sudo modprobe ama_transcoder
+
+#. Confirm driver's successful installation by issuing:
+
+   .. code-block::
+
+      cat /sys/class/misc/ama_transcoder0/version_information
+
+   It should return::
+
+      <<<Version Info>>>
+      ZSP Version = 0.1.5
+      SC Version = 0.0.0
+      eSecure Version = 1.0.0
+      PCIe FW Version = 2.1.0
+      PCIe CTRL Patch Version = 1.0.1
+      PCIe PHY Patch A Version = 1.0.0
+
+*****************
+Install the |SDK|
+*****************
+
+.. include:: ./include/installation/install_procedure.rst
+
+.. _runtime-setup:
+
+******************************
+Set Up the Runtime Environment
+******************************
+
+#. Set path to firmware directory
+
+   .. code-block::
+
+      export FIRMWARE_DIR=/opt/amd/ma35/firmware
+
+#. Run setup script
+
+   .. code-block::
+
+      source /opt/amd/ma35/scripts/setup.sh
+
+***********************
+Run Your First Examples
+***********************
+
+See the :ref:`tutorials and examples <tutorials-and-examples>` page to learn how to run jobs on your system.
+ 
+
+..
+  ------------
+  
+  © Copyright 2020-2023, Advanced Micro Devices, Inc.
+  
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.

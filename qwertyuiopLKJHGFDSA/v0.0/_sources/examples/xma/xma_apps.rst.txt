@@ -1,0 +1,54 @@
+##########################
+XMA Examples for the |SDK|
+##########################
+
+.. highlight:: none
+
+.. contents:: Table of Contents
+    :local:
+    :depth: 1
+.. .. section-numbering::
+
+The examples in the |LOC_PATH_XMA|/bin folder illustrate how C-based applications can natively interact with |SDK| devices using  the XMA (Xilinx Media Accelerator) APIs. The examples are for advanced use-cases where using the FFmpeg command-line interface is not appropriate.
+
+Detailed documentation on the |SDK| plugin interface and the XMA APIs can be found in the :doc:`C API Programming Guide </c_apis>` section of the documentation.
+
+.. rubric:: Requirements
+
+- The XMA applications has been built for and verified on a supported OS.
+- The XMA applications only work with elementary streams. Container formats such as mp4 are not supported. 
+
+*****************
+Environment Setup
+*****************
+
+.. include:: /include/examples/setup_examples.rst
+
+.. _xma-decoder-example:
+.. include:: ./include/decoder.rst
+
+|
+
+.. _xma-encoder-example:
+.. include:: ./include/encoder.rst
+
+|
+
+.. _xma-scaler-example:
+.. include:: ./include/scaler.rst
+
+|
+
+.. _xma-transcoder-example:
+.. include:: ./include/transcoder.rst
+
+..
+  ------------
+  
+  © Copyright 2020-2023, Advanced Micro Devices, Inc.
+  
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.

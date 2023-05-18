@@ -1,0 +1,54 @@
+This page is under review.
+
+
+#############################################
+Managing Video Acceleration Compute Resources
+#############################################
+
+.. note::
+   This page describes how to manage video acceleration resources and run multiple jobs on given machine through the Xilinx Resource Manager (XRM). For information about managing multiple tasks across a cluster of machines using orchestration services (i.e Kubernetes or EKS), refer to the following page: :ref:`Deploying with Kubernetes <deploying-with-kubernetes>`.
+
+.. highlight:: none
+
+.. contents:: Table of Contents
+    :local:
+    :depth: 1
+.. .. section-numbering::
+
+************
+Introduction
+************
+
+The notion of compute units (CUs) and CU pool is central to resource management. A typical video transcode pipeline is made of multiple CUs such as decoder, scaler, lookahead, and encoder. These together form a CU pool. Based on the input resolution and type of transcode, the load of CUs within a CU pool varies. The number of required resources determines how many parallel jobs can run in real-time. CUs and CU pool are managed by the Xilinx® resource manager (XRM). XRM is a software layer responsible for managing the video hardware accelerators available in the host system. |SDK| compilable cards have a set processing capacity, e.g., an MA35 device is capable of an aggregate processing equivalent of 2 4kp60 streams. XRM allows for running and managing multiple heterogeneous job, in parallel, on all devices hosted in a chassis. It is noted that XRM strictly adheres to the total capacity of the hosted accelerators, i.e., it does not allow for over-subscription of resources.
+
+
+The rest of this guide explains how to:
+
+#. Assign jobs to specific devices :ref:`using explicit device identifiers <using-explicit-device-ids>`
+#. Measure device load and determine where to run jobs using either :ref:`manual <manual-resource-management>` or :ref:`automated  <using-job-descriptions>` resource management techniques
+
+
+.. include:: ./include/managing_jobs/explicit_device_ids.rst
+
+|
+
+.. include:: ./include/managing_jobs/manual_resource_management.rst
+
+|
+
+.. include:: ./include/managing_jobs/automated_resource_management.rst
+
+|
+.. include:: ./include/managing_jobs/xrm_reference.rst
+
+
+..
+  ------------
+  
+  © Copyright 2020-2023, Advanced Micro Devices, Inc.
+  
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.

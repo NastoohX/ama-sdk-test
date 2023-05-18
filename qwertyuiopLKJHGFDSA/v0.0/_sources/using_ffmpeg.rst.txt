@@ -1,0 +1,66 @@
+This page is under review.
+
+############
+Using FFmpeg
+############
+
+.. highlight:: none
+
+This page documents how to use FFmpeg with the |SDK|.
+
+.. contents:: Table of Contents
+    :local:
+    :depth: 1
+
+|
+
+************
+Introduction
+************
+
+FFmpeg is an industry standard, open source, widely used utility for handling video. FFmpeg has many capabilities, including encoding and decoding of all video compression formats, encoding and decoding of audio, encapsulating, and extracting audio, and video from transport streams, and many more. The |SDK| includes an enhanced version of FFmpeg that communicates with the hardware accelerated transcode pipeline.
+
+It is not within the scope of this document to provide an exhaustive guide on the usage of FFmpeg. Various resources can be found online, for example:
+
+-  https://www.ffmpeg.org/documentation.html
+-  http://howto-pages.org/ffmpeg/
+
+The following sections describe the options used with FFmpeg to configure the various hardware accelerators available on an |DEVICE| device. 
+
+|
+
+Example Commands
+================
+
+A simple FFmpeg command for accelerated transcoding with the |SDK| will look like this one::
+
+   ffmpeg -hwaccel ama -hwaccel_device /dev/ama_transcoder0,vpeloglevel=7 -c:v h264_ama -i infile.mp4 -c:v hevc_ama -s:v 1920x1080 -b:v 1000K -r 60 -f mp4 -y transcoded.mp4
+
+There are many other ways in which FFmpeg can be used to leverage the video transcoding features of an |DEVICE| device. Examples illustrating how to run FFmpeg for encoding, decoding, and transcoding with or without ABR scaling, video composition and ML are included in :doc:`FFmpeg tutorials </examples/ffmpeg/tutorials>`.
+
+|
+
+.. include:: ./include/ffmpeg/general_options.rst
+
+|
+
+.. include:: ./include/ffmpeg/video_decoding.rst
+
+|
+
+.. include:: ./include/ffmpeg/video_encoding.rst
+
+|
+
+.. include:: ./include/ffmpeg/video_scaling.rst
+
+..
+  ------------
+  
+  © Copyright |YEAR|, Advanced Micro Devices, Inc.
+  
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.

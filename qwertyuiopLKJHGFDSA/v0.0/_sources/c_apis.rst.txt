@@ -1,0 +1,136 @@
+This Page is a Placeholder. Ignore the Instruction Set.
+
+
+.. _c_api_programming_guide:
+
+#######################
+C API Programming Guide
+#######################
+
+.. contents:: Table of Contents
+    :local:
+    :depth: 1
+.. .. section-numbering::
+
+
+********
+Overview
+********
+
+The |SDK| provides a C-based application programming interface (API) which facilitates the integration of Xilinx transcoding capabilities in proprietary frameworks. This API is provided in the form of plugins leveraging the Xilinx Media Accelerator (XMA) library and the Xilinx Resource Manager (XRM) library.
+
+.. rubric:: The XMA Library
+
+The XMA library (libxma) is meant to simplify the development of applications managing and controlling video accelerators such as decoders, scalers, filters, and encoders. 
+
+
+.. rubric:: The XRM Library
+
+The XRM library is used to manage the hardware accelerators available in the system. XRM keeps track of total system capacity for each of the compute units such as the decoder, scaler, and encoder. The XRM library makes it possible to perform actions such as reserving, allocating and releasing resources; calculating resource load and max capacity.
+
+
+.. rubric:: The |SDK| Plugins
+
+The |SDK| provides 4 different plugins, each corresponding to a specific hardware accelerated feature of the card:
+
+- The decoder plugin
+- The encoder plugin
+- The filter plugin
+- The scaler plugin
+
+Any combination of plugins can be used when integrating with a proprietary framework.
+
+|
+
+*************************************
+General Application Development Guide
+*************************************
+
+Integration layers for applications using the |SDK| are organized around the following steps:
+
+#. Initialization
+#. Resource Reservation
+#. Session Creation
+#. Runtime Processing
+#. Cleanup
+
+Resource Initialization and Allocation
+======================================
+
+Applications using the plugins must first create a XRM plugin using the :c:func:`xrm_PLUGIN_reserve`, where PLUGIN is one of dec, enc, or scale. This is done using the XRM APIs, as described in detail in the :ref:`XRM API Reference Guide <xrm-api-reference>` below.
+
+Session Creation
+================
+Once the resources have been allocated, the application must create dedicated plugin sessions for each of the hardware accelerators that need to be used (decoder, scaler, encoder, filter).
+
+To create a session, the application must first initialize all the required properties and parameters of the particular plugin. It must then call the  corresponding session creation function. A complete reference for all the plugins is provided below.
+
+Runtime Processing
+==================
+The plugins provide functions to send data from the host and receive data from the device. The data is in the form of video frames (:c:struct:`XmaFrame`). It is also possible to do zero-copy operations where frames are passed from one hardware accelerator to the next without being copied back to the host. The send and receive functions are specific to each plugin and the return code should be used to determine the next suitable action. A complete reference for all the plugins is provided below.
+
+Cleanup
+=======
+When the application finishes, it should destroy each plugin session using the corresponding destroy function. Doing so will free the resources on the Xilinx devices for other jobs and ensure that everything is released and cleaned-up properly.
+
+The application should also use the :c:func:`xrm_PLUGIN_release`, where PLUGIN is one of dec, enc, or scale to release allocated resources. This is done using the XRM APIs, as described in detail in the :ref:`XRM API Reference Guide <xrm-api-reference>` below.
+
+|
+
+********************************************
+Compiling and Linking with the |SDK| Plugins
+********************************************
+
+The plugins can be dynamically linked to the application. The required package to build applications is XRM. This package is provided as part of the |SDK|. 
+
+To provide the necessary declarations in your application, include the following header in your source code::
+
+  #include <xrm.h>
+
+To compile and link your application with the plugins, add the following lines to your CMakeList.txt file::
+
+  target_link_libraries (${PROJECT_NAME} PUBLIC xma PUBLIC xrm_interface)
+  target_include_directories (${PROJECT_NAME} 
+    PUBLIC "${PROJECT_SOURCE_DIR}/include" 
+    PUBLIC "$<TARGET_PROPERTY:xrm,INTERFACE_INCLUDE_DIRECTORIES>")
+
+|
+
+.. include:: ./include/c_apis/xma_common_data_structures.rst
+
+|
+
+.. include:: ./include/c_apis/xma_decoder_plugin_api.rst
+
+|
+
+.. include:: ./include/c_apis/xma_scaler_plugin_api.rst
+
+|
+
+.. include:: ./include/c_apis/xma_encoder_plugin_api.rst
+
+|
+
+.. include:: ./include/c_apis/xma_filter_plugin_api.rst
+
+|
+.. 
+.. .. include:: ./include/c_apis/xvbm_api.rst
+
+|
+
+.. include:: ./include/c_apis/xrm_api.rst
+
+|
+
+..
+  ------------
+  
+  © Copyright 2020-2023, Advanced Micro Devices, Inc.
+  
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
